@@ -57,6 +57,52 @@ async def guardar_mensaje(pool, id_sesion: int, rol: str, contenido: str):
             id_sesion, rol, contenido
         )
 
+async def buscar_contexto_bd(pool, mensaje: str) -> str:
+    async with pool.acquire() as conn:
+        tipos = await conn.fetch(
+            "SELECT n_id_pk, c_nombre FROM asistente.mae_tipo_documento WHERE c_activo = 'S'"
+        )
+        tipo_encontrado = None
+        mensaje_lower = mensaje.lower()
+        for tipo in tipos:
+            palabras = tipo["c_nombre"].lower().split()
+            coincidencias = sum(1 for p in palabras if len(p) > 4 and p in mensaje_lower)
+            if coincidencias >= 2:
+                tipo_encontrado = tipo
+                break
+
+        if not tipo_encontrado:
+            return ""
+
+        pasos = await conn.fetch(
+            """SELECT c.n_orden, c.c_descripcion_paso, c.n_costo, c.c_observacion,
+                      e.c_nombre as entidad, e.c_direccion, e.c_telefono, e.c_url
+               FROM asistente.tab_cadena_certificacion c
+               LEFT JOIN asistente.mae_entidad_certificadora e ON c.n_id_entidad = e.n_id_pk
+               WHERE c.n_id_tipo_documento = $1 AND c.c_activo = 'S'
+               ORDER BY c.n_orden""",
+            tipo_encontrado["n_id_pk"]
+        )
+
+        if not pasos:
+            return ""
+
+        contexto = f"Tipo de documento: {tipo_encontrado['c_nombre']}\n\nCadena de certificacion oficial:\n"
+        for paso in pasos:
+            contexto += f"\nPaso {paso['n_orden']}: {paso['c_descripcion_paso']}"
+            if paso["entidad"]:
+                contexto += f"\n   Entidad: {paso['entidad']}"
+            if paso["c_telefono"]:
+                contexto += f" | Tel: {paso['c_telefono']}"
+            if paso["c_url"]:
+                contexto += f" | Web: {paso['c_url']}"
+            if paso["n_costo"] and paso["n_costo"] > 0:
+                contexto += f"\n   Costo: S/. {paso['n_costo']}"
+            if paso["c_observacion"]:
+                contexto += f"\n   Nota: {paso['c_observacion']}"
+
+        return contexto
+
 @router.post("/mensajes")
 async def recibir_mensaje(request: Request):
     data = await request.json()
@@ -79,7 +125,9 @@ async def recibir_mensaje(request: Request):
         await guardar_mensaje(pool, id_sesion, "user", mensaje)
         historial.append({"role": "user", "content": mensaje})
 
-        respuesta = await consultar_ia(historial)
+        contexto_bd = await buscar_contexto_bd(pool, mensaje)
+
+        respuesta = await consultar_ia(historial, contexto_bd)
 
         await guardar_mensaje(pool, id_sesion, "assistant", respuesta)
         await enviar_mensaje(numero, respuesta)
