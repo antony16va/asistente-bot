@@ -1,4 +1,4 @@
-Asistente para orientación consultar a través de Whatsapp
+Asistente para orientación consular a través de Whatsapp
 
 
 Tecnologías usadas:
