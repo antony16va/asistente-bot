@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Request
 import httpx
+from sentence_transformers import SentenceTransformer
 from app.config import EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE
 from app.database import get_pool
 from app.ia import consultar_ia
 
 router = APIRouter(prefix="/webhook", tags=["webhook"])
+
+print("Cargando modelo de embeddings...")
+modelo_embedding = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+print("Modelo cargado.")
 
 async def enviar_mensaje(numero: str, mensaje: str):
     url = f"{EVOLUTION_API_URL}/message/sendText/{EVOLUTION_INSTANCE}"
@@ -58,20 +63,21 @@ async def guardar_mensaje(pool, id_sesion: int, rol: str, contenido: str):
         )
 
 async def buscar_contexto_bd(pool, mensaje: str) -> str:
-    async with pool.acquire() as conn:
-        tipos = await conn.fetch(
-            "SELECT n_id_pk, c_nombre FROM asistente.mae_tipo_documento WHERE c_activo = 'S'"
-        )
-        tipo_encontrado = None
-        mensaje_lower = mensaje.lower()
-        for tipo in tipos:
-            palabras = tipo["c_nombre"].lower().split()
-            coincidencias = sum(1 for p in palabras if len(p) > 4 and p in mensaje_lower)
-            if coincidencias >= 2:
-                tipo_encontrado = tipo
-                break
+    vector = modelo_embedding.encode(mensaje).tolist()
+    vector_str = "[" + ",".join(map(str, vector)) + "]"
 
-        if not tipo_encontrado:
+    async with pool.acquire() as conn:
+        tipo = await conn.fetchrow(
+            """SELECT n_id_pk, c_nombre,
+               embedding <=> $1::vector AS distancia
+               FROM asistente.mae_tipo_documento
+               WHERE c_activo = 'S' AND embedding IS NOT NULL
+               ORDER BY distancia ASC
+               LIMIT 1""",
+            vector_str
+        )
+
+        if not tipo or tipo["distancia"] > 0.6:
             return ""
 
         pasos = await conn.fetch(
@@ -81,13 +87,13 @@ async def buscar_contexto_bd(pool, mensaje: str) -> str:
                LEFT JOIN asistente.mae_entidad_certificadora e ON c.n_id_entidad = e.n_id_pk
                WHERE c.n_id_tipo_documento = $1 AND c.c_activo = 'S'
                ORDER BY c.n_orden""",
-            tipo_encontrado["n_id_pk"]
+            tipo["n_id_pk"]
         )
 
         if not pasos:
             return ""
 
-        contexto = f"Tipo de documento: {tipo_encontrado['c_nombre']}\n\nCadena de certificacion oficial:\n"
+        contexto = f"Tipo de documento: {tipo['c_nombre']}\n\nCadena de certificacion oficial:\n"
         for paso in pasos:
             contexto += f"\nPaso {paso['n_orden']}: {paso['c_descripcion_paso']}"
             if paso["entidad"]:
