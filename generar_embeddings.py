@@ -1,13 +1,17 @@
 import asyncio
 import asyncpg
+import os
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
+load_dotenv()
+
 DB_CONFIG = {
-    "host": "172.17.0.2",
-    "port": 5432,
-    "user": "asistente_bot",
-    "password": "asistente_2026",
-    "database": "asistente"
+    "host": os.getenv("DB_HOST"),
+    "port": int(os.getenv("DB_PORT", 5432)),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
 }
 
 async def generar_embeddings():
