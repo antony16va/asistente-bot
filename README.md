@@ -6,7 +6,7 @@ Tecnologías usadas:
 
 -VM Oracle
 -Postgresql 17
--fastAPI
+-FastAPI
 -Evolution API
 -Nginx
 -Groq
