@@ -15,7 +15,6 @@ DB_CONFIG = {
 }
 
 async def generar_embeddings():
-    print("Cargando modelo de embeddings...")
     model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
     conn = await asyncpg.connect(**DB_CONFIG)
@@ -24,18 +23,15 @@ async def generar_embeddings():
         "SELECT n_id_pk, c_nombre, c_descripcion FROM asistente.mae_tipo_documento WHERE c_activo = 'S'"
     )
 
-    print(f"Generando embeddings para {len(tipos)} tipos de documento...")
-
-    for tipo in tipos:
+       for tipo in tipos:
         texto = f"{tipo['c_nombre']}. {tipo['c_descripcion'] or ''}"
         vector = model.encode(texto).tolist()
         await conn.execute(
             "UPDATE asistente.mae_tipo_documento SET embedding = $1 WHERE n_id_pk = $2",
             str(vector), tipo["n_id_pk"]
         )
-        print(f"  ✓ {tipo['c_nombre']}")
+        print(f"{tipo['c_nombre']}")
 
     await conn.close()
-    print("\nEmbeddings generados correctamente.")
-
+    
 asyncio.run(generar_embeddings())
