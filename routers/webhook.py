@@ -3,7 +3,7 @@ import httpx
 from sentence_transformers import SentenceTransformer
 from app.config import EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE
 from app.database import get_pool
-from app.ia import consultar_ia
+from app.chat_bot import consultar_ia
 
 router = APIRouter(prefix="/webhook", tags=["webhook"])
 
@@ -77,7 +77,15 @@ async def buscar_contexto_bd(pool, mensaje: str) -> str:
             vector_str
         )
 
-        if not tipo or tipo["distancia"] > 0.6:
+        if not tipo:
+            return ""
+
+        print(
+            f"Documento detectado: {tipo['c_nombre']} "
+            f"(distancia={tipo['distancia']:.4f})"
+        )
+
+        if tipo["distancia"] > 0.40:
             return ""
 
         pasos = await conn.fetch(
@@ -93,7 +101,19 @@ async def buscar_contexto_bd(pool, mensaje: str) -> str:
         if not pasos:
             return ""
 
-        contexto = f"Tipo de documento: {tipo['c_nombre']}\n\nCadena de certificacion oficial:\n"
+        contexto = f"""
+        TIPO DE DOCUMENTO:
+        {tipo['c_nombre']}
+
+        ESTA ES LA CADENA OFICIAL DE CERTIFICACIÓN.
+
+        Debes responder utilizando únicamente esta información.
+
+        Si el ciudadano no ha completado algún paso,
+        indica que todavía NO está listo para acudir al MRE.
+
+        CADENA OFICIAL:
+        """
         for paso in pasos:
             contexto += f"\nPaso {paso['n_orden']}: {paso['c_descripcion_paso']}"
             if paso["entidad"]:
@@ -131,7 +151,19 @@ async def recibir_mensaje(request: Request):
         await guardar_mensaje(pool, id_sesion, "user", mensaje)
         historial.append({"role": "user", "content": mensaje})
 
-        contexto_bd = await buscar_contexto_bd(pool, mensaje)
+        contexto_bd = await buscar_contexto_bd(
+            pool,
+            mensaje
+        )
+
+        print("\n====================")
+        print("PREGUNTA:")
+        print(mensaje)
+
+        print("\nCONTEXTO:")
+        print(contexto_bd[:1000])
+
+        print("====================\n")
 
         respuesta = await consultar_ia(historial, contexto_bd)
 
