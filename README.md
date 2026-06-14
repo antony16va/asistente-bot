@@ -63,7 +63,9 @@ Ciudadano
  WhatsApp
 ```
 ---
+
 ## 🚀 Tecnologías Utilizadas
+
 #Infraestructura
 Oracle Cloud Infrastructure (OCI)
 Ubuntu Server
@@ -85,6 +87,7 @@ Evolution API
 WhatsApp
 
 ---
+
 ##📂 Estructura del Proyecto
 
 ```text
@@ -108,7 +111,9 @@ asistente-bot/
 └── README.md
 ```
 ---
+
 ## 🧠 Funcionamiento
+
 1. Recepción del mensaje
 
 El ciudadano envía una consulta por WhatsApp.
@@ -143,7 +148,9 @@ El contexto oficial es enviado al modelo LLM mediante RAG.
 
 El modelo genera una respuesta estructurada y comprensible para el ciudadano.
 ---
+
 ##📊 Modelo de Datos
+
 mae_tipo_documento
 
 Catálogo de documentos admitidos.
@@ -156,7 +163,7 @@ Ejemplos:
 - Antecedentes Penales
 - Documento Notarial
 
-#tab_cadena_certificacion
+tab_cadena_certificacion
 
 Almacena los pasos oficiales requeridos para cada documento.
 
@@ -167,7 +174,7 @@ Ejemplo:
 | 2     | SUNEDU      | Registro y validación |
 | 3     | MRE         | Apostilla             |
 
-#mae_entidad_certificadora
+mae_entidad_certificadora
 
 Información de entidades certificadoras:
 
@@ -176,7 +183,9 @@ Dirección
 Teléfono
 Página web
 ---
+
 ##🔐 Variables de Entorno
+
 DB_HOST=
 DB_PORT=
 DB_USER=
@@ -189,7 +198,9 @@ EVOLUTION_API_URL=
 EVOLUTION_API_KEY=
 EVOLUTION_INSTANCE=
 ---
+
 ##⚙ Instalación
+
 1. Clonar repositorio
 git clone https://github.com/usuario/asistente-bot.git
 cd asistente-bot
@@ -213,7 +224,9 @@ python generar_embeddings.py
 6. Ejecutar API
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ---
+
 ##📌 Características Implementadas
+
 ✅ Atención vía WhatsApp
 ✅ Integración con Evolution API
 ✅ PostgreSQL + pgvector
@@ -225,7 +238,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ✅ Restricción temática (solo apostilla y legalización)
 ✅ Arquitectura asíncrona
 ---
+
 ##🔮 Mejoras Futuras
+
 Validación automática de requisitos documentales.
 Portal web para consultas.
 Dashboard estadístico.
@@ -233,11 +248,13 @@ Integración con Power BI.
 Soporte multicanal (Web, Telegram y Microsoft Teams).
 Integración con sistemas institucionales del MRE.
 ---
+
 ##👨‍💻 Autores
--Antony Valencia Meza
--Güido Maidana Aquino
--Jhojan Tarazona Gómez
--Alvaro Espinoza Garate
+
+Antony Valencia Meza
+Güido Maidana Aquino
+Jhojan Tarazona Gómez
+Alvaro Espinoza Garate
 
 Estudiantes de Ingeniería de Sistemas
 Universidad Nacional Federico Villarreal
