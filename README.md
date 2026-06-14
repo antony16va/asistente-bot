@@ -112,7 +112,7 @@ asistente-bot/
 ├── app/
 │   ├── config.py
 │   ├── database.py
-│   ├── ia.py
+│   ├── chat_bot.py
 │   └── main.py
 │
 ├── routers/
