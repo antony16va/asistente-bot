@@ -7,21 +7,10 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 # RESPUESTAS PREDEFINIDAS
 # =====================================================
 
-RESPUESTA_FUERA_DOMINIO = """
-Puedo ayudarte únicamente con orientación sobre:
-
-• Apostilla de documentos peruanos
-• Legalización de documentos peruanos
-• Requisitos previos para acudir al MRE
-• Cadena de certificación de documentos
-
-Indícame qué documento deseas apostillar o legalizar.
-"""
-
-RESPUESTA_SALUDO = """
+RESPUESTA_SALUDO_INICIO = """
 Hola.
 
-Soy el asistente virtual de orientación para Apostilla y Legalización de documentos peruanos.
+Soy el asistente virtual de orientación para Apostilla y Legalización de documentos peruanos ante el Ministerio de Relaciones Exteriores del Perú (MRE).
 
 Puedo ayudarte a verificar:
 
@@ -33,6 +22,23 @@ Puedo ayudarte a verificar:
 ¿Qué documento deseas apostillar o legalizar?
 """
 
+RESPUESTA_SALUDO_CIERRE = """
+Perfecto.
+
+Si tienes otro documento o consulta sobre apostilla o legalización, aquí estaré para ayudarte.
+"""
+
+RESPUESTA_FUERA_DOMINIO = """
+Puedo ayudarte únicamente con orientación sobre:
+
+• Apostilla de documentos peruanos
+• Legalización de documentos peruanos
+• Requisitos previos para acudir al MRE
+• Cadena de certificación de documentos
+
+Indícame qué documento deseas apostillar o legalizar.
+"""
+
 # =====================================================
 # CLASIFICADOR PROMPT
 # =====================================================
@@ -42,20 +48,32 @@ Eres un clasificador de intenciones.
 
 Debes responder ÚNICAMENTE con una palabra:
 
-SALUDO
+SALUDO_INICIO
+SALUDO_CIERRE
 APOSTILLA
 FUERA_DOMINIO
 
 REGLAS:
 
-SALUDO:
-- saludos básicos (hola, buenas, buenos días, gracias, ok, perfecto)
+SALUDO_INICIO:
+- hola
+- buenos días
+- buenas
+- inicio de conversación
+
+SALUDO_CIERRE:
+- gracias
+- perfecto
+- ok
+- listo
+- muchas gracias
+- cierre de conversación
 
 APOSTILLA:
 - temas de apostilla o legalización
 - documentos peruanos (títulos, partidas, certificados, antecedentes)
 - SUNEDU, RENIEC, MRE, Cancillería
-- cualquier seguimiento de conversación previa
+- seguimiento de conversación previa
 
 FUERA_DOMINIO:
 - temas no relacionados (deportes, cocina, tecnología, etc.)
@@ -126,7 +144,6 @@ async def clasificar_intencion(mensaje: str) -> str:
 
         return data["choices"][0]["message"]["content"].strip().upper()
 
-
 # =====================================================
 # FUNCIÓN PRINCIPAL DEL CHATBOT
 # =====================================================
@@ -140,8 +157,11 @@ async def consultar_ia(historial: list, contexto_bd: str = "") -> str:
     print(f"INTENCION => {intencion}")
 
     # 2. Respuestas rápidas sin IA
-    if intencion == "SALUDO":
-        return RESPUESTA_SALUDO
+    if intencion == "SALUDO_INICIO":
+        return RESPUESTA_SALUDO_INICIO
+
+    if intencion == "SALUDO_CIERRE":
+        return RESPUESTA_SALUDO_CIERRE
 
     if intencion == "FUERA_DOMINIO":
         return RESPUESTA_FUERA_DOMINIO
