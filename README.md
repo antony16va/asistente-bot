@@ -226,17 +226,18 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ---
 
 ##📌 Características Implementadas
-
-✅ Atención vía WhatsApp
-✅ Integración con Evolution API
-✅ PostgreSQL + pgvector
-✅ Embeddings semánticos
-✅ Retrieval Augmented Generation (RAG)
-✅ Historial conversacional
-✅ Detección automática de documentos
-✅ Respuestas basadas en información oficial
-✅ Restricción temática (solo apostilla y legalización)
-✅ Arquitectura asíncrona
+```text
+Atención vía WhatsApp
+Integración con Evolution API
+PostgreSQL + pgvector
+Embeddings semánticos
+Retrieval Augmented Generation (RAG)
+Historial conversacional
+Detección automática de documentos
+Respuestas basadas en información oficial
+Restricción temática (solo apostilla y legalización)
+Arquitectura asíncrona
+```
 ---
 
 ##🔮 Mejoras Futuras
